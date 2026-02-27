@@ -145,9 +145,9 @@
       <!-- Subtitle -->
       <p class="mt-6 text-lg sm:text-xl text-stone-500 max-w-2xl mx-auto leading-relaxed">
         Just the loop. Any provider. Pure OTP.<br class="hidden sm:inline">
-        The agent loop your applications deserve &mdash; swap models in one line,
-        execute tools in parallel, run agents as supervised GenServers.
-        Nothing you don't need. Everything you do.
+        Four tools, three dependencies, one behaviour per provider.
+        Swap models in one line, run agents as supervised GenServers.
+        Need something it doesn't have? The agent builds it.
       </p>
 
       <!-- CTAs -->
@@ -214,12 +214,14 @@ result.text
     <div class="max-w-6xl mx-auto px-4 sm:px-6">
       <div class="text-center mb-16">
         <h2 class="text-3xl sm:text-4xl font-bold text-stone-900">
-          Everything you need. Nothing you don't.
+          Minimal by design. Extensible by nature.
         </h2>
         <p class="mt-4 text-lg text-stone-500 max-w-2xl mx-auto">
-          Alloy is the agent loop &mdash; not a framework, not a platform.
-          You bring your application, your persistence layer, your HTTP stack.
-          Alloy runs the agents.
+          Three dependencies: <code class="text-amber-700 bg-amber-50 px-1 py-0.5 rounded text-sm font-mono">jason</code>,
+          <code class="text-amber-700 bg-amber-50 px-1 py-0.5 rounded text-sm font-mono">req</code>,
+          <code class="text-amber-700 bg-amber-50 px-1 py-0.5 rounded text-sm font-mono">telemetry</code>. That's it.
+          No framework, no platform, no opinions.
+          Need a new tool? The agent writes one. Need a new provider? It's ~200 lines.
         </p>
       </div>
 
@@ -234,8 +236,8 @@ result.text
           </div>
           <h3 class="text-lg font-semibold text-stone-900">Just the Loop</h3>
           <p class="mt-2 text-stone-500 text-sm leading-relaxed">
-            Send messages. Execute tools. Loop until done. No HTTP server, no database layer,
-            no routing, no opinions. You build the application &mdash; Alloy runs the agents.
+            Send messages. Execute tools. Loop until done. Four core tools &mdash; read, write, edit, bash &mdash;
+            and a system prompt. What you leave out matters more than what you put in.
           </p>
         </div>
 
@@ -717,8 +719,8 @@ end</code></pre>
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
               </svg>
               <span class="text-stone-600 text-sm leading-relaxed">
-                You want a <strong class="text-stone-800">full-stack framework</strong> with built-in persistence, routing, and UI components.
-                <span class="text-stone-400">Try LangChain or Jido.</span>
+                You want a <strong class="text-stone-800">batteries-included framework</strong> with 14 dependencies, built-in persistence, and prescribed architecture.
+                <span class="text-stone-400">Try Jido or Sagents.</span>
               </span>
             </li>
             <li class="flex gap-3">
@@ -757,9 +759,10 @@ end</code></pre>
       <div class="mt-14 rounded-xl border border-stone-200 bg-stone-50 p-6 sm:p-8 text-center">
         <p class="text-stone-600 leading-relaxed max-w-2xl mx-auto">
           <strong class="text-stone-800">Alloy is an engine, not a framework.</strong>
-          Frameworks tell you how to build your application.
-          Alloy doesn't know what your application is &mdash; and it doesn't want to.
-          It gives you a pure agent loop, gets out of the way, and lets you build what you need.
+          Other agent frameworks ship 14 dependencies and tell you how to structure your application.
+          Alloy ships 3 and gets out of the way.
+          If an agent needs a capability it doesn't have, it writes the code itself.
+          That's the whole idea.
         </p>
       </div>
 
@@ -849,6 +852,25 @@ $ mix alloy --provider anthropic --tools read,bash</code></pre>
           View on Hex.pm
         </a>
       </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- ANVILOS TEASER -->
+  <!-- ============================================ -->
+  <section class="py-14 bg-stone-900">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+      <p class="text-sm font-medium text-amber-500 tracking-wider uppercase mb-3">Coming soon</p>
+      <h2 class="text-2xl sm:text-3xl font-bold text-white">
+        Alloy is the engine. AnvilOS is the workshop.
+      </h2>
+      <p class="mt-4 text-stone-400 max-w-xl mx-auto leading-relaxed">
+        Persistence, connectors, a dashboard, and a runtime for 24/7 agents.
+        Built on Alloy. Built on Phoenix. Built on OTP.
+      </p>
+      <p class="mt-6 text-stone-500 text-sm">
+        Sign up for updates &mdash; or just star the repo and watch.
+      </p>
     </div>
   </section>
 
