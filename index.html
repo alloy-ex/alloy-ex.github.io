@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alloy — The agent engine for Elixir</title>
+  <meta name="description" content="The agent engine for Elixir. A pure agent loop with any provider, parallel tool execution, GenServer agents, and multi-agent teams. Built on OTP.">
+
+  <!-- Open Graph (social sharing previews) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Alloy — The agent engine for Elixir">
+  <meta property="og:description" content="Just the loop. Any provider. Pure OTP. Build production agents that swap models in one line and run as supervised GenServers.">
+  <meta property="og:url" content="https://alloy.dev">
+  <meta property="og:image" content="https://alloy.dev/og-image.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Alloy — The agent engine for Elixir">
+  <meta name="twitter:description" content="Just the loop. Any provider. Pure OTP. Build production agents that swap models in one line and run as supervised GenServers.">
+  <meta name="twitter:image" content="https://alloy.dev/og-image.png">
+
+  <!-- Favicon (inline SVG as data URI — no external file needed) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23D97706'/><text x='50' y='72' font-family='system-ui' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>A</text></svg>">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'Fira Code', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <!-- Highlight.js for Elixir syntax -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/elixir.min.js"></script>
+
+  <style>
+    /* Override highlight.js blues/purples with warm tones */
+    .hljs { background: #F5F5F4; color: #292524; }
+    .hljs-keyword, .hljs-selector-tag { color: #92400E; }
+    .hljs-built_in { color: #B45309; }
+    .hljs-title, .hljs-title.class_, .hljs-title.function_ { color: #1C1917; font-weight: 600; }
+    .hljs-string { color: #5F6B3A; }
+    .hljs-number { color: #9A6324; }
+    .hljs-symbol { color: #B45309; }
+    .hljs-comment { color: #A8A29E; font-style: italic; }
+    .hljs-attr { color: #57534E; }
+    .hljs-variable { color: #44403C; }
+    .hljs-params { color: #57534E; }
+    .hljs-meta { color: #78716C; }
+    .hljs-literal { color: #92400E; }
+    .hljs-type { color: #78716C; }
+    .hljs-doctag { color: #92400E; }
+
+    /* Smooth scroll */
+    html { scroll-behavior: smooth; }
+
+    /* Provider tab active state */
+    .provider-tab { transition: all 150ms ease; }
+    .provider-tab.active {
+      background-color: #FFFBEB;
+      color: #92400E;
+      border-color: #D97706;
+    }
+
+    /* Subtle entrance animation */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up {
+      animation: fadeUp 0.6s ease-out forwards;
+    }
+
+    /* Architecture layer styling */
+    .arch-layer {
+      border: 1px solid #D6D3D1;
+      transition: border-color 150ms ease;
+    }
+    .arch-layer:hover {
+      border-color: #D97706;
+    }
+  </style>
+</head>
+
+<body class="bg-stone-50 text-stone-800 font-sans antialiased">
+
+  <!-- ============================================ -->
+  <!-- NAV -->
+  <!-- ============================================ -->
+  <nav class="fixed top-0 inset-x-0 z-50 bg-stone-50/90 backdrop-blur border-b border-stone-200">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
+      <a href="#" class="text-xl font-bold text-stone-900 tracking-tight">
+        alloy
+      </a>
+      <div class="flex items-center gap-6 text-sm font-medium text-stone-600">
+        <a href="https://hexdocs.pm/alloy" class="hover:text-stone-900 transition-colors">Docs</a>
+        <a href="https://hex.pm/packages/alloy" class="hover:text-stone-900 transition-colors">Hex.pm</a>
+        <a href="https://github.com/alloy-ex/alloy" class="hover:text-stone-900 transition-colors flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================================ -->
+  <!-- HERO -->
+  <!-- ============================================ -->
+  <section class="pt-32 pb-20 md:pt-40 md:pb-28">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center fade-up">
+
+      <!-- Badges -->
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <span class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-sm font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">
+          v0.4.0 &mdash; Teams, Streaming &amp; Middleware
+        </span>
+        <a href="https://github.com/alloy-ex/alloy" class="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1 text-sm font-medium text-stone-600 ring-1 ring-inset ring-stone-200 hover:bg-stone-200 transition-colors">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          <img src="https://img.shields.io/github/stars/alloy-ex/alloy?style=flat&label=stars&color=78716C" alt="GitHub stars" class="h-4">
+        </a>
+        <a href="https://hex.pm/packages/alloy" class="inline-flex">
+          <img src="https://img.shields.io/hexpm/v/alloy.svg?style=flat&color=D97706" alt="Hex.pm version" class="h-5 rounded">
+        </a>
+      </div>
+
+      <!-- Headline -->
+      <h1 class="mt-8 text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-stone-900 leading-[1.1]">
+        The agent engine<br>for Elixir.
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="mt-6 text-lg sm:text-xl text-stone-500 max-w-2xl mx-auto leading-relaxed">
+        Just the loop. Any provider. Pure OTP.<br class="hidden sm:inline">
+        The agent loop your applications deserve &mdash; swap models in one line,
+        execute tools in parallel, run agents as supervised GenServers.
+        Nothing you don't need. Everything you do.
+      </p>
+
+      <!-- CTAs -->
+      <div class="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="https://hexdocs.pm/alloy" class="rounded-lg bg-amber-600 px-6 py-3 text-white font-semibold hover:bg-amber-700 transition-colors text-center">
+          Get Started
+        </a>
+        <a href="https://github.com/alloy-ex/alloy" class="rounded-lg border border-stone-300 px-6 py-3 font-semibold text-stone-700 hover:bg-stone-100 transition-colors text-center">
+          View on GitHub &rarr;
+        </a>
+      </div>
+
+      <!-- Hero code block -->
+      <div class="mt-14 max-w-xl mx-auto text-left">
+        <div class="rounded-xl border border-stone-200 overflow-hidden shadow-sm">
+          <div class="flex items-center gap-1.5 px-4 py-2.5 bg-stone-100 border-b border-stone-200">
+            <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+            <span class="ml-2 text-xs text-stone-400 font-mono">iex</span>
+          </div>
+          <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="language-elixir">{:ok, result} = Alloy.run("Read mix.exs and tell me the version",
+  provider: {Alloy.Provider.Anthropic, model: "claude-sonnet-4-6"},
+  tools: [Alloy.Tool.Core.Read]
+)
+
+result.text
+#=> "The version in mix.exs is 0.4.0"</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- STATS BAR -->
+  <!-- ============================================ -->
+  <section class="border-y border-stone-200 bg-white">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-0 md:divide-x md:divide-stone-200 text-center">
+        <div>
+          <div class="text-base font-semibold text-stone-900">Just the engine</div>
+          <div class="mt-1 text-sm text-stone-400">No HTTP. No database. No opinions.</div>
+        </div>
+        <div>
+          <div class="text-base font-semibold text-stone-900">Any provider</div>
+          <div class="mt-1 text-sm text-stone-400">Swap models in one line.</div>
+        </div>
+        <div>
+          <div class="text-base font-semibold text-stone-900">Pure OTP</div>
+          <div class="mt-1 text-sm text-stone-400">Supervised agents. Real parallelism.</div>
+        </div>
+        <div>
+          <div class="text-base font-semibold text-stone-900">Open source</div>
+          <div class="mt-1 text-sm text-stone-400">MIT licensed. No lock-in.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- FEATURES -->
+  <!-- ============================================ -->
+  <section class="py-20 md:py-28">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold text-stone-900">
+          Everything you need. Nothing you don't.
+        </h2>
+        <p class="mt-4 text-lg text-stone-500 max-w-2xl mx-auto">
+          Alloy is the agent loop &mdash; not a framework, not a platform.
+          You bring your application, your persistence layer, your HTTP stack.
+          Alloy runs the agents.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- Feature 1: Just the Engine -->
+        <div class="rounded-xl border border-stone-200 bg-white p-6 hover:border-amber-300 transition-colors">
+          <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5V18M15 7.5V18M3 16.811V8.69c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 010 1.954l-7.108 4.061A1.125 1.125 0 013 16.811z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-stone-900">Just the Loop</h3>
+          <p class="mt-2 text-stone-500 text-sm leading-relaxed">
+            Send messages. Execute tools. Loop until done. No HTTP server, no database layer,
+            no routing, no opinions. You build the application &mdash; Alloy runs the agents.
+          </p>
+        </div>
+
+        <!-- Feature 2: OTP -->
+        <div class="rounded-xl border border-stone-200 bg-white p-6 hover:border-amber-300 transition-colors">
+          <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-stone-900">OTP-Native</h3>
+          <p class="mt-2 text-stone-500 text-sm leading-relaxed">
+            Agents run as supervised GenServers. Supervision trees restart crashed agents.
+            Parallel tool execution is real concurrency, not async callbacks.
+          </p>
+        </div>
+
+        <!-- Feature 3: Teams -->
+        <div class="rounded-xl border border-stone-200 bg-white p-6 hover:border-amber-300 transition-colors">
+          <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-stone-900">Multi-Agent Teams</h3>
+          <p class="mt-2 text-stone-500 text-sm leading-relaxed">
+            Delegate, broadcast, handoff. Fault-isolated by default &mdash;
+            one agent crashes, the others keep running. Shared context optional.
+          </p>
+        </div>
+
+        <!-- Feature 4: Streaming -->
+        <div class="rounded-xl border border-stone-200 bg-white p-6 hover:border-amber-300 transition-colors">
+          <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 010-5.304m5.304 0a3.75 3.75 0 010 5.304m-7.425 2.121a6.75 6.75 0 010-9.546m9.546 0a6.75 6.75 0 010 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-stone-900">Streaming</h3>
+          <p class="mt-2 text-stone-500 text-sm leading-relaxed">
+            Token-by-token streaming from any provider. SSE support built in.
+            Works with the agent loop, GenServer, and REPL.
+          </p>
+        </div>
+
+        <!-- Feature 5: Middleware -->
+        <div class="rounded-xl border border-stone-200 bg-white p-6 hover:border-amber-300 transition-colors">
+          <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-stone-900">Middleware</h3>
+          <p class="mt-2 text-stone-500 text-sm leading-relaxed">
+            Telemetry, logging, custom hooks. Middleware can halt the loop to enforce
+            spend caps or security policies. Runs at every hook point.
+          </p>
+        </div>
+
+        <!-- Feature 6: Context -->
+        <div class="rounded-xl border border-stone-200 bg-white p-6 hover:border-amber-300 transition-colors">
+          <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-stone-900">Context Compaction</h3>
+          <p class="mt-2 text-stone-500 text-sm leading-relaxed">
+            Automatic conversation summarization when approaching token limits.
+            Agents keep working across long sessions without losing context.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- PROVIDER SWAP DEMO -->
+  <!-- ============================================ -->
+  <section class="py-20 md:py-28 bg-white border-y border-stone-200">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-bold text-stone-900">
+          One API. Any provider.
+        </h2>
+        <p class="mt-4 text-lg text-stone-500">
+          Same tools, same conversation. Only the provider line changes.
+          Adding a new provider is ~200 lines implementing one behaviour.
+        </p>
+      </div>
+
+      <!-- Provider tabs -->
+      <div class="flex justify-center gap-2 mb-6">
+        <button onclick="showProvider('anthropic')" class="provider-tab active px-4 py-2 rounded-lg border border-stone-200 text-sm font-medium text-stone-600 hover:text-stone-900">
+          Anthropic
+        </button>
+        <button onclick="showProvider('openai')" class="provider-tab px-4 py-2 rounded-lg border border-stone-200 text-sm font-medium text-stone-600 hover:text-stone-900">
+          OpenAI
+        </button>
+        <button onclick="showProvider('gemini')" class="provider-tab px-4 py-2 rounded-lg border border-stone-200 text-sm font-medium text-stone-600 hover:text-stone-900">
+          Gemini
+        </button>
+        <button onclick="showProvider('ollama')" class="provider-tab px-4 py-2 rounded-lg border border-stone-200 text-sm font-medium text-stone-600 hover:text-stone-900">
+          Ollama
+        </button>
+      </div>
+
+      <!-- Code blocks (one per provider) -->
+      <div class="rounded-xl border border-stone-200 overflow-hidden shadow-sm">
+        <div class="flex items-center gap-1.5 px-4 py-2.5 bg-stone-100 border-b border-stone-200">
+          <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+          <span class="ml-2 text-xs text-stone-400 font-mono">my_app.exs</span>
+        </div>
+
+        <div id="code-anthropic" class="provider-code">
+          <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="language-elixir">{:ok, result} = Alloy.run("Summarize the README",
+  provider: {Alloy.Provider.Anthropic, model: "claude-sonnet-4-6"},
+  tools: [Alloy.Tool.Core.Read, Alloy.Tool.Core.Bash],
+  max_turns: 10
+)</code></pre>
+        </div>
+
+        <div id="code-openai" class="provider-code hidden">
+          <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="language-elixir">{:ok, result} = Alloy.run("Summarize the README",
+  provider: {Alloy.Provider.OpenAI, model: "gpt-5.2"},
+  tools: [Alloy.Tool.Core.Read, Alloy.Tool.Core.Bash],
+  max_turns: 10
+)</code></pre>
+        </div>
+
+        <div id="code-gemini" class="provider-code hidden">
+          <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="language-elixir">{:ok, result} = Alloy.run("Summarize the README",
+  provider: {Alloy.Provider.Google, model: "gemini-2.5-flash"},
+  tools: [Alloy.Tool.Core.Read, Alloy.Tool.Core.Bash],
+  max_turns: 10
+)</code></pre>
+        </div>
+
+        <div id="code-ollama" class="provider-code hidden">
+          <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="language-elixir">{:ok, result} = Alloy.run("Summarize the README",
+  provider: {Alloy.Provider.Ollama, model: "llama4"},
+  tools: [Alloy.Tool.Core.Read, Alloy.Tool.Core.Bash],
+  max_turns: 10
+)</code></pre>
+        </div>
+      </div>
+
+      <!-- Provider grid -->
+      <div class="mt-10 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-stone-400">
+        <span>Anthropic</span>
+        <span class="text-stone-200">&middot;</span>
+        <span>OpenAI</span>
+        <span class="text-stone-200">&middot;</span>
+        <span>Google Gemini</span>
+        <span class="text-stone-200">&middot;</span>
+        <span>Ollama</span>
+        <span class="text-stone-200">&middot;</span>
+        <span>OpenRouter</span>
+        <span class="text-stone-200">&middot;</span>
+        <span>xAI</span>
+        <span class="text-stone-200">&middot;</span>
+        <span>DeepSeek</span>
+        <span class="text-stone-200">&middot;</span>
+        <span>Mistral</span>
+        <span class="text-stone-200">&middot;</span>
+        <span class="text-amber-600 font-medium">and growing</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- GENSERVER + TEAMS -->
+  <!-- ============================================ -->
+  <section class="py-20 md:py-28">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+
+        <!-- Left: GenServer agent -->
+        <div>
+          <div class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20 mb-4">
+            GenServer Agents
+          </div>
+          <h3 class="text-2xl sm:text-3xl font-bold text-stone-900">
+            Agents that survive crashes.
+          </h3>
+          <p class="mt-4 text-stone-500 leading-relaxed">
+            Every agent is a GenServer. Supervisors restart them on failure.
+            Conversations persist across crashes. State is isolated.
+            This is what OTP was built for.
+          </p>
+          <div class="mt-6 rounded-xl border border-stone-200 overflow-hidden shadow-sm">
+            <div class="flex items-center gap-1.5 px-4 py-2.5 bg-stone-100 border-b border-stone-200">
+              <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+            </div>
+            <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="language-elixir">{:ok, agent} = Alloy.Agent.Server.start_link(
+  provider: {Alloy.Provider.Anthropic,
+    model: "claude-sonnet-4-6"},
+  tools: [Read, Write, Edit, Bash],
+  system_prompt: "You are a senior Elixir developer."
+)
+
+# Stateful conversation
+{:ok, r1} = Alloy.Agent.Server.chat(agent,
+  "What does this project do?")
+{:ok, r2} = Alloy.Agent.Server.chat(agent,
+  "Now refactor the main module")</code></pre>
+          </div>
+        </div>
+
+        <!-- Right: Multi-agent teams -->
+        <div>
+          <div class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20 mb-4">
+            Multi-Agent Teams
+          </div>
+          <h3 class="text-2xl sm:text-3xl font-bold text-stone-900">
+            Agents that work together.
+          </h3>
+          <p class="mt-4 text-stone-500 leading-relaxed">
+            Spin up teams of specialized agents under a supervisor. Delegate tasks,
+            broadcast to all, or hand off between agents.
+            Fault isolation means one failure doesn't take down the team.
+          </p>
+          <div class="mt-6 rounded-xl border border-stone-200 overflow-hidden shadow-sm">
+            <div class="flex items-center gap-1.5 px-4 py-2.5 bg-stone-100 border-b border-stone-200">
+              <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+            </div>
+            <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="language-elixir">{:ok, team} = Alloy.Team.start_link(
+  agents: [
+    researcher: [
+      provider: {Google, model: "gemini-2.5-flash"},
+      system_prompt: "You are a research assistant."
+    ],
+    coder: [
+      provider: {Anthropic, model: "claude-sonnet-4-6"},
+      tools: [Read, Write, Edit],
+      system_prompt: "You are a senior developer."
+    ]
+  ]
+)
+
+{:ok, research} = Alloy.Team.delegate(
+  team, :researcher, "Find the latest Elixir patterns")
+{:ok, code} = Alloy.Team.delegate(
+  team, :coder, "Implement those patterns")</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- CUSTOM TOOLS -->
+  <!-- ============================================ -->
+  <section class="py-20 md:py-28 bg-white border-y border-stone-200">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-bold text-stone-900">
+          Your tools, your rules.
+        </h2>
+        <p class="mt-4 text-lg text-stone-500 max-w-2xl mx-auto">
+          Implement a behaviour. Hand it to the agent. Alloy handles parallel execution,
+          error recovery, and provider-specific wire formatting.
+          Ship with five built-in tools, or bring your own.
+        </p>
+      </div>
+
+      <div class="rounded-xl border border-stone-200 overflow-hidden shadow-sm">
+        <div class="flex items-center gap-1.5 px-4 py-2.5 bg-stone-100 border-b border-stone-200">
+          <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+          <span class="ml-2 text-xs text-stone-400 font-mono">lib/my_app/tools/web_search.ex</span>
+        </div>
+        <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="language-elixir">defmodule MyApp.Tools.WebSearch do
+  @behaviour Alloy.Tool
+
+  @impl true
+  def definition do
+    %{
+      name: "web_search",
+      description: "Search the web for current information",
+      input_schema: %{
+        type: "object",
+        properties: %{
+          query: %{type: "string", description: "Search query"}
+        },
+        required: ["query"]
+      }
+    }
+  end
+
+  @impl true
+  def execute(%{"query" => query}, _context) do
+    results = MyApp.Search.run(query)
+    {:ok, format_results(results)}
+  end
+end</code></pre>
+      </div>
+
+      <!-- Built-in tools -->
+      <div class="mt-10 grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div class="text-center p-3 rounded-lg border border-stone-200 bg-stone-50">
+          <div class="font-mono text-sm font-medium text-stone-700">read</div>
+          <div class="text-xs text-stone-400 mt-0.5">Read files</div>
+        </div>
+        <div class="text-center p-3 rounded-lg border border-stone-200 bg-stone-50">
+          <div class="font-mono text-sm font-medium text-stone-700">write</div>
+          <div class="text-xs text-stone-400 mt-0.5">Write files</div>
+        </div>
+        <div class="text-center p-3 rounded-lg border border-stone-200 bg-stone-50">
+          <div class="font-mono text-sm font-medium text-stone-700">edit</div>
+          <div class="text-xs text-stone-400 mt-0.5">Search &amp; replace</div>
+        </div>
+        <div class="text-center p-3 rounded-lg border border-stone-200 bg-stone-50">
+          <div class="font-mono text-sm font-medium text-stone-700">bash</div>
+          <div class="text-xs text-stone-400 mt-0.5">Shell commands</div>
+        </div>
+        <div class="text-center p-3 rounded-lg border border-stone-200 bg-stone-50 col-span-2 sm:col-span-1">
+          <div class="font-mono text-sm font-medium text-stone-700">scratchpad</div>
+          <div class="text-xs text-stone-400 mt-0.5">Key-value notepad</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- ARCHITECTURE -->
+  <!-- ============================================ -->
+  <section class="py-20 md:py-28">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-bold text-stone-900">
+          Layers, not magic.
+        </h2>
+        <p class="mt-4 text-lg text-stone-500">
+          Every layer does one thing. No hidden state, no implicit wiring, no surprises.
+          Read the source in an afternoon.
+        </p>
+      </div>
+
+      <!-- Architecture diagram -->
+      <div class="space-y-2 max-w-2xl mx-auto font-mono text-sm">
+
+        <div class="arch-layer rounded-lg bg-white p-4 text-center">
+          <div class="font-semibold text-stone-900">Your Application</div>
+          <div class="text-stone-400 text-xs mt-0.5">Alloy.run/2 &middot; Agent.Server &middot; Team</div>
+        </div>
+
+        <div class="flex justify-center">
+          <svg class="w-4 h-4 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3"/>
+          </svg>
+        </div>
+
+        <div class="arch-layer rounded-lg bg-white p-4 text-center">
+          <div class="font-semibold text-stone-900">Turn Loop</div>
+          <div class="text-stone-400 text-xs mt-0.5">Call provider &rarr; execute tools &rarr; loop until done</div>
+        </div>
+
+        <div class="flex justify-center">
+          <svg class="w-4 h-4 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3"/>
+          </svg>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div class="arch-layer rounded-lg bg-white p-4 text-center">
+            <div class="font-semibold text-stone-900 text-xs">Providers</div>
+            <div class="text-stone-400 text-xs mt-0.5">Wire format</div>
+          </div>
+          <div class="arch-layer rounded-lg bg-white p-4 text-center">
+            <div class="font-semibold text-stone-900 text-xs">Tools</div>
+            <div class="text-stone-400 text-xs mt-0.5">Parallel exec</div>
+          </div>
+          <div class="arch-layer rounded-lg bg-white p-4 text-center">
+            <div class="font-semibold text-stone-900 text-xs">Middleware</div>
+            <div class="text-stone-400 text-xs mt-0.5">Hooks &amp; halt</div>
+          </div>
+        </div>
+
+        <div class="flex justify-center">
+          <svg class="w-4 h-4 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3"/>
+          </svg>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="arch-layer rounded-lg bg-white p-4 text-center">
+            <div class="font-semibold text-stone-900 text-xs">Context &amp; Session</div>
+            <div class="text-stone-400 text-xs mt-0.5">Compaction &middot; discovery &middot; tokens</div>
+          </div>
+          <div class="arch-layer rounded-lg bg-white p-4 text-center">
+            <div class="font-semibold text-stone-900 text-xs">Scheduler &amp; PubSub</div>
+            <div class="text-stone-400 text-xs mt-0.5">Cron &middot; heartbeat &middot; events</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- ALLOY IS FOR YOU IF -->
+  <!-- ============================================ -->
+  <section class="py-20 md:py-28 bg-white border-y border-stone-200">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6">
+      <div class="text-center mb-14">
+        <h2 class="text-3xl sm:text-4xl font-bold text-stone-900">
+          Is Alloy right for you?
+        </h2>
+        <p class="mt-4 text-lg text-stone-500 max-w-2xl mx-auto">
+          Alloy is deliberately narrow. It does one thing well and stays out of your way.
+          Here's how to know if it fits.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8 md:gap-12">
+
+        <!-- Left: Alloy is for you if -->
+        <div>
+          <h3 class="text-lg font-semibold text-stone-900 mb-5">Alloy is for you if&hellip;</h3>
+          <ul class="space-y-4">
+            <li class="flex gap-3">
+              <svg class="w-5 h-5 text-amber-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+              </svg>
+              <span class="text-stone-600 text-sm leading-relaxed">
+                You want an <strong class="text-stone-800">agent loop you can read in an afternoon</strong> and understand completely. No magic, no hidden wiring.
+              </span>
+            </li>
+            <li class="flex gap-3">
+              <svg class="w-5 h-5 text-amber-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+              </svg>
+              <span class="text-stone-600 text-sm leading-relaxed">
+                You're building <strong class="text-stone-800">your own application</strong> and need an engine underneath it &mdash; not a framework that dictates your architecture.
+              </span>
+            </li>
+            <li class="flex gap-3">
+              <svg class="w-5 h-5 text-amber-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+              </svg>
+              <span class="text-stone-600 text-sm leading-relaxed">
+                You need to <strong class="text-stone-800">swap providers freely</strong> without rewriting tool definitions or conversation logic.
+              </span>
+            </li>
+            <li class="flex gap-3">
+              <svg class="w-5 h-5 text-amber-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+              </svg>
+              <span class="text-stone-600 text-sm leading-relaxed">
+                You want agents running as <strong class="text-stone-800">supervised OTP processes</strong> with real fault isolation and parallel execution.
+              </span>
+            </li>
+            <li class="flex gap-3">
+              <svg class="w-5 h-5 text-amber-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+              </svg>
+              <span class="text-stone-600 text-sm leading-relaxed">
+                You want to <strong class="text-stone-800">own your stack</strong>. You pick the database, the HTTP layer, the deployment. Alloy doesn't care.
+              </span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Right: You might prefer something else if -->
+        <div>
+          <h3 class="text-lg font-semibold text-stone-900 mb-5">You might prefer something else if&hellip;</h3>
+          <ul class="space-y-4">
+            <li class="flex gap-3">
+              <svg class="w-5 h-5 text-stone-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              <span class="text-stone-600 text-sm leading-relaxed">
+                You want a <strong class="text-stone-800">full-stack framework</strong> with built-in persistence, routing, and UI components.
+                <span class="text-stone-400">Try LangChain or Jido.</span>
+              </span>
+            </li>
+            <li class="flex gap-3">
+              <svg class="w-5 h-5 text-stone-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              <span class="text-stone-600 text-sm leading-relaxed">
+                You only need <strong class="text-stone-800">structured output extraction</strong>, not a full agent loop.
+                <span class="text-stone-400">Try Instructor.</span>
+              </span>
+            </li>
+            <li class="flex gap-3">
+              <svg class="w-5 h-5 text-stone-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              <span class="text-stone-600 text-sm leading-relaxed">
+                You need <strong class="text-stone-800">Ecto schema integration</strong> baked into every layer.
+                <span class="text-stone-400">LangChain does this natively.</span>
+              </span>
+            </li>
+            <li class="flex gap-3">
+              <svg class="w-5 h-5 text-stone-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              <span class="text-stone-600 text-sm leading-relaxed">
+                You just need to <strong class="text-stone-800">call an LLM</strong> and don't need tools or an agent loop.
+                <span class="text-stone-400">ReqLLM is lighter.</span>
+              </span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Anti-framework manifesto -->
+      <div class="mt-14 rounded-xl border border-stone-200 bg-stone-50 p-6 sm:p-8 text-center">
+        <p class="text-stone-600 leading-relaxed max-w-2xl mx-auto">
+          <strong class="text-stone-800">Alloy is an engine, not a framework.</strong>
+          Frameworks tell you how to build your application.
+          Alloy doesn't know what your application is &mdash; and it doesn't want to.
+          It gives you a pure agent loop, gets out of the way, and lets you build what you need.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- BUILT IN THE OPEN -->
+  <!-- ============================================ -->
+  <section class="py-20 md:py-28 bg-white border-y border-stone-200">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+      <div class="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center mx-auto mb-6">
+        <svg class="w-6 h-6 text-stone-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-bold text-stone-900">
+        Built in the open.
+      </h2>
+      <p class="mt-4 text-lg text-stone-500 max-w-xl mx-auto">
+        Alloy is MIT licensed and developed on GitHub.
+        Report bugs, request features, or contribute a provider &mdash;
+        every PR makes the engine better for everyone.
+      </p>
+      <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="https://github.com/alloy-ex/alloy" class="inline-flex items-center justify-center gap-2 rounded-lg border border-stone-300 px-5 py-2.5 font-medium text-stone-700 hover:bg-stone-100 transition-colors text-sm">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          Star on GitHub
+        </a>
+        <a href="https://github.com/alloy-ex/alloy/issues" class="inline-flex items-center justify-center gap-2 rounded-lg border border-stone-300 px-5 py-2.5 font-medium text-stone-700 hover:bg-stone-100 transition-colors text-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Open an Issue
+        </a>
+        <a href="https://github.com/alloy-ex/alloy/blob/main/CHANGELOG.md" class="inline-flex items-center justify-center gap-2 rounded-lg border border-stone-300 px-5 py-2.5 font-medium text-stone-700 hover:bg-stone-100 transition-colors text-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+          </svg>
+          Changelog
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- INSTALL -->
+  <!-- ============================================ -->
+  <section class="py-20 md:py-28">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 text-center">
+      <h2 class="text-3xl sm:text-4xl font-bold text-stone-900">
+        Get started in 30 seconds.
+      </h2>
+      <p class="mt-4 text-lg text-stone-500">
+        Add one line to <code class="text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded text-sm font-mono">mix.exs</code>
+        and you're ready.
+      </p>
+
+      <div class="mt-8 rounded-xl border border-stone-200 overflow-hidden shadow-sm text-left">
+        <div class="flex items-center gap-1.5 px-4 py-2.5 bg-stone-100 border-b border-stone-200">
+          <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+          <span class="ml-2 text-xs text-stone-400 font-mono">mix.exs</span>
+        </div>
+        <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="language-elixir">def deps do
+  [
+    {:alloy, "~> 0.4.0"}
+  ]
+end</code></pre>
+      </div>
+
+      <div class="mt-6 rounded-xl border border-stone-200 overflow-hidden shadow-sm text-left">
+        <div class="flex items-center gap-1.5 px-4 py-2.5 bg-stone-100 border-b border-stone-200">
+          <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-stone-300"></div>
+          <span class="ml-2 text-xs text-stone-400 font-mono">terminal</span>
+        </div>
+        <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="language-elixir">$ mix deps.get
+$ mix alloy --provider anthropic --tools read,bash</code></pre>
+      </div>
+
+      <div class="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="https://hexdocs.pm/alloy" class="rounded-lg bg-amber-600 px-6 py-3 text-white font-semibold hover:bg-amber-700 transition-colors">
+          Read the Docs
+        </a>
+        <a href="https://hex.pm/packages/alloy" class="rounded-lg border border-stone-300 px-6 py-3 font-semibold text-stone-700 hover:bg-stone-100 transition-colors">
+          View on Hex.pm
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- FOOTER -->
+  <!-- ============================================ -->
+  <footer class="py-10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-stone-400">
+        <div>
+          <span class="font-semibold text-stone-600">alloy</span>
+          &mdash; MIT License &mdash; Built with Elixir
+        </div>
+        <div class="flex items-center gap-6">
+          <a href="https://hexdocs.pm/alloy" class="hover:text-stone-600 transition-colors">Docs</a>
+          <a href="https://hex.pm/packages/alloy" class="hover:text-stone-600 transition-colors">Hex.pm</a>
+          <a href="https://github.com/alloy-ex/alloy" class="hover:text-stone-600 transition-colors">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================ -->
+  <!-- SCRIPTS -->
+  <!-- ============================================ -->
+  <script>
+    // Initialize syntax highlighting
+    hljs.highlightAll();
+
+    // Provider tab switching
+    function showProvider(provider) {
+      // Hide all code blocks
+      document.querySelectorAll('.provider-code').forEach(el => {
+        el.classList.add('hidden');
+      });
+      // Show selected
+      document.getElementById('code-' + provider).classList.remove('hidden');
+
+      // Update tab styles
+      document.querySelectorAll('.provider-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.currentTarget.classList.add('active');
+    }
+  </script>
+
+</body>
+</html>
