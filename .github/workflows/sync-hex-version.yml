@@ -1,0 +1,47 @@
+name: Sync Hex Version
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types:
+      - hex_release_published
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  sync-version:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: sync-hex-version
+      cancel-in-progress: true
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Sync version from Hex
+        run: node scripts/sync-hex-version.mjs
+
+      - name: Commit and push if changed
+        run: |
+          if git diff --quiet; then
+            echo "No version changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "chore(site): sync Alloy version from Hex"
+          git push
